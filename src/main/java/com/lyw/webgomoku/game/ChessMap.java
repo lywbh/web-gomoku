@@ -62,7 +62,6 @@ public class ChessMap {
      * 检查是否有连成五子，传入上次落子
      */
     public boolean checkFive(ChessAction chessAction) {
-        pointCheck(chessAction);
         return ChessUtils.dudgeWin(map, MAP_WIDTH, chessAction.getI(), chessAction.getJ());
     }
 

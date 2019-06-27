@@ -31,12 +31,13 @@
 
     // 棋盘
     let gameMap = document.getElementById("gameMap");
-    let viewWidth = window.innerWidth || document.documentElement.clientWidth;
+    const viewWidth = window.innerWidth || document.documentElement.clientWidth;
     if (!(system.win || system.mac || system.x11)) {
         gameMap.width = viewWidth * 0.9;
         gameMap.height = viewWidth * 0.9;
     }
-    let ctx = gameMap.getContext("2d");
+    const unitWidth = gameMap.width / 15;
+    const unitHeight = gameMap.height / 15;
 
     // 连接
     let websocket = null;
@@ -48,8 +49,10 @@
     websocket.onerror = function () {
         alert("连接发生异常");
     };
-    websocket.onopen = function (event) {
+    websocket.onopen = function () {
         console.log("连接成功");
+        let roomId = prompt('请输入要加入的房间号');
+        websocket.send(JSON.stringify({"type": "1", "roomId": roomId}));
     };
     websocket.onclose = function () {
         console.log("连接关闭");
@@ -59,13 +62,35 @@
     };
 
     // 游戏逻辑-接收消息
+    let ctx = gameMap.getContext("2d");
     websocket.onmessage = function (message) {
-        // TODO 收到游戏状态和棋盘状态推送，做渲染
+        ctx.clearRect(0, 0, gameMap.width, gameMap.height);
+        let data = JSON.parse(message.data);
+        console.log(data);
+        let status = data.gameStatus;
+        if (status === '')
+        let map = data.map;
+        if (map != null) {
+            for (let i = 0; i < map.length; i++) {
+                for (let j = 0; j < map[i].length; j++) {
+                    if (map[i][j] === 2) {
+                        ctx.fillStyle = "#FF0000";
+                        ctx.fillRect(j * unitHeight, i * unitWidth, unitHeight, unitWidth);
+                    } else if (map[i][j] === 1) {
+                        ctx.fillStyle = "#0000FF";
+                        ctx.fillRect(j * unitHeight, i * unitWidth, unitHeight, unitWidth);
+                    }
+                }
+            }
+        }
     };
 
     // 游戏逻辑-发送消息
     gameMap.addEventListener('click', function doClick(e) {
-        // TODO 鼠标点击，判断棋子落点(x, y)，请求后端
+        let rect = gameMap.getBoundingClientRect();
+        let x = e.clientX - rect.left * (gameMap.width / rect.width);
+        let y = e.clientY - rect.top * (gameMap.height / rect.height);
+        websocket.send(JSON.stringify({"type": "3", "i": y / unitHeight, "j": x / unitWidth}));
     }, true);
     gameMap.focus();
 </script>

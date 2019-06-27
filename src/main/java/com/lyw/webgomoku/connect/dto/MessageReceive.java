@@ -1,13 +1,13 @@
 package com.lyw.webgomoku.connect.dto;
 
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 public class MessageReceive {
 
     private String type;
 
-    private String roomCode;
+    private String roomId;
 
     private Integer i;
 

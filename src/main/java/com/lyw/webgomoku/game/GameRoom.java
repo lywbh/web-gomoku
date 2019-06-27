@@ -110,53 +110,62 @@ public class GameRoom implements Runnable {
         enableWatcher();
         while (gameStatus != GameStatus.TERMINAL) {
             synchronized (this) {
-                switch (gameStatus) {
-                    case PREPARE:
-                        // 准备状态，等待另一位玩家，啥都不做
-                        break;
-                    case WHITE_WAITING:
-                        // 检查有无落白子的动作
-                        if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_WHITE) {
-                            chessMap.put(chessAction);
-                            // 落子完成后检查结果
-                            if (chessMap.checkFive(chessAction)) {
-                                gameStatus = GameStatus.WHITE_WIN;
-                            } else if (chessMap.checkFull()) {
-                                gameStatus = GameStatus.DRAW;
-                            } else {
-                                gameStatus = GameStatus.BLACK_WAITING;
+                try {
+                    switch (gameStatus) {
+                        case PREPARE:
+                            // 准备状态，等待另一位玩家，啥都不做
+                            break;
+                        case WHITE_WAITING:
+                            // 检查有无落白子的动作
+                            if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_WHITE) {
+                                chessMap.put(chessAction);
+                                // 落子完成后检查结果
+                                if (chessMap.checkFive(chessAction)) {
+                                    gameStatus = GameStatus.WHITE_WIN;
+                                } else if (chessMap.checkFull()) {
+                                    gameStatus = GameStatus.DRAW;
+                                } else {
+                                    gameStatus = GameStatus.BLACK_WAITING;
+                                }
+                                chessAction = null;
+                                pushCurrent();
                             }
-                            chessAction = null;
-                            pushCurrent();
-                        }
-                        break;
-                    case BLACK_WAITING:
-                        // 检查有无落黑子的动作
-                        if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_BLACK) {
-                            chessMap.put(chessAction);
-                            // 落子完成后检查结果
-                            if (chessMap.checkFive(chessAction)) {
-                                gameStatus = GameStatus.BLACK_WIN;
-                            } else if (chessMap.checkFull()) {
-                                gameStatus = GameStatus.DRAW;
-                            } else {
-                                gameStatus = GameStatus.WHITE_WAITING;
+                            break;
+                        case BLACK_WAITING:
+                            // 检查有无落黑子的动作
+                            if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_BLACK) {
+                                chessMap.put(chessAction);
+                                // 落子完成后检查结果
+                                if (chessMap.checkFive(chessAction)) {
+                                    gameStatus = GameStatus.BLACK_WIN;
+                                } else if (chessMap.checkFull()) {
+                                    gameStatus = GameStatus.DRAW;
+                                } else {
+                                    gameStatus = GameStatus.WHITE_WAITING;
+                                }
+                                chessAction = null;
+                                pushCurrent();
                             }
-                            chessAction = null;
+                            break;
+                        case WHITE_WIN:
+                        case BLACK_WIN:
+                        case DRAW:
+                            // 游戏结束了，推送一个结果，再把状态终止
                             pushCurrent();
-                        }
-                        break;
-                    case WHITE_WIN:
-                    case BLACK_WIN:
-                    case DRAW:
-                        // 游戏结束了，推送一个结果，再把状态终止
-                        pushCurrent();
-                        gameStatus = GameStatus.TERMINAL;
-                        break;
-                    case TERMINAL:
-                        // TERMINAL会直接跳出，不会有这个情况
-                        break;
+                            gameStatus = GameStatus.TERMINAL;
+                            break;
+                        case TERMINAL:
+                            // TERMINAL会直接跳出，不会有这个情况
+                            break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+            }
+            // 停一会让出CPU
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignore) {
             }
         }
         // TERMINAL后线程结束，关闭房间
@@ -201,7 +210,8 @@ public class GameRoom implements Runnable {
     }
 
     private MessageSend currentStatus() {
-        return new MessageSend(gameStatus.code, chessMap.getMap());
+        int[][] map = chessMap == null ? null : chessMap.getMap();
+        return new MessageSend(gameStatus.code, map);
     }
 
 }
