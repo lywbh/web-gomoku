@@ -1,10 +1,12 @@
 package com.lyw.webgomoku.connect.dto;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
 
-@Data
+@AllArgsConstructor
 public class MessageSend {
 
+    private String gameStatus;
 
+    private int[][] map;
 
 }

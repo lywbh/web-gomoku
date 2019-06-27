@@ -1,5 +1,6 @@
 package com.lyw.webgomoku.game;
 
+import lombok.AllArgsConstructor;
 import org.springframework.util.Assert;
 
 public class ChessMap {
@@ -7,8 +8,13 @@ public class ChessMap {
     private static final int MAP_WIDTH = 15;
     private static final int MAP_HEIGHT = 15;
 
+    @AllArgsConstructor
     public enum MapPointEnum {
-        EMPTY, CHESS_WHITE, CHESS_BLACK;
+        EMPTY(0),
+        CHESS_WHITE(1),
+        CHESS_BLACK(2);
+
+        private int code;
     }
 
     private MapPointEnum[][] map;
@@ -24,6 +30,19 @@ public class ChessMap {
         }
         whiteCount = 0;
         blackCount = 0;
+    }
+
+    public int[][] getMap() {
+        if (map == null) {
+            return null;
+        }
+        int[][] m = new int[MAP_WIDTH][MAP_HEIGHT];
+        for (int i = 0; i < MAP_WIDTH; ++i) {
+            for (int j = 0; j < MAP_HEIGHT; ++j) {
+                m[i][j] = map[i][j].code;
+            }
+        }
+        return m;
     }
 
     /**
@@ -44,6 +63,7 @@ public class ChessMap {
      */
     public boolean checkFive(ChessAction chessAction) {
         pointCheck(chessAction);
+        // TODO 检查算法
         return false;
     }
 

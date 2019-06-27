@@ -1,8 +1,8 @@
 package com.lyw.webgomoku.connect.dto;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class MessageReceive {
 
     private String type;

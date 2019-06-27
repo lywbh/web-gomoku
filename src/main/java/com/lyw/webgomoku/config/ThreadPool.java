@@ -7,4 +7,6 @@ public class ThreadPool {
 
     public static ExecutorService gamePool = Executors.newCachedThreadPool();
 
+    public static ExecutorService watcherPool = Executors.newCachedThreadPool();
+
 }
