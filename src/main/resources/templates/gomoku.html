@@ -6,6 +6,7 @@
 </head>
 <body style="text-align: center">
 <canvas id="gameMap" width="500" height="500" tabindex="0" style="border:1px solid #000000;">不支持canvas</canvas>
+<div id="statusText" style="text-align: center;"></div>
 </body>
 <script type="text/javascript" th:inline="javascript">
     // 适配手机
@@ -51,8 +52,7 @@
     };
     websocket.onopen = function () {
         console.log("连接成功");
-        let roomId = prompt('请输入要加入的房间号');
-        websocket.send(JSON.stringify({"type": "1", "roomId": roomId}));
+        join();
     };
     websocket.onclose = function () {
         console.log("连接关闭");
@@ -61,27 +61,44 @@
         websocket.close();
     };
 
+    // 游戏逻辑-加入游戏
+    function join() {
+        let roomId = prompt('请输入要加入的房间号');
+        websocket.send(JSON.stringify({"type": "1", "roomId": roomId}));
+        document.getElementById("statusText").innerText = "";
+    }
+
     // 游戏逻辑-接收消息
     let ctx = gameMap.getContext("2d");
     websocket.onmessage = function (message) {
         ctx.clearRect(0, 0, gameMap.width, gameMap.height);
         let data = JSON.parse(message.data);
-        console.log(data);
-        let status = data.gameStatus;
-        if (status === '')
-        let map = data.map;
-        if (map != null) {
-            for (let i = 0; i < map.length; i++) {
-                for (let j = 0; j < map[i].length; j++) {
-                    if (map[i][j] === 2) {
+        if (data.map != null) {
+            for (let i = 0; i < data.map.length; i++) {
+                for (let j = 0; j < data.map[i].length; j++) {
+                    if (data.map[i][j] === 2) {
                         ctx.fillStyle = "#FF0000";
                         ctx.fillRect(j * unitHeight, i * unitWidth, unitHeight, unitWidth);
-                    } else if (map[i][j] === 1) {
+                    } else if (data.map[i][j] === 1) {
                         ctx.fillStyle = "#0000FF";
                         ctx.fillRect(j * unitHeight, i * unitWidth, unitHeight, unitWidth);
                     }
                 }
             }
+        }
+        if (data.gameStatus === '0') {
+            document.getElementById("statusText").innerText = "waiting player";
+        } else if (data.gameStatus === '1' || data.gameStatus === '2') {
+            document.getElementById("statusText").innerText = "game started";
+        } else if (data.gameStatus === '3') {
+            document.getElementById("statusText").innerText = "blue win";
+            setTimeout(join, 3000);
+        } else if (data.gameStatus === '4') {
+            document.getElementById("statusText").innerText = "red win";
+            setTimeout(join, 3000);
+        } else if (data.gameStatus === '5') {
+            document.getElementById("statusText").innerText = "draw";
+            setTimeout(join, 3000);
         }
     };
 
