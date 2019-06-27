@@ -93,12 +93,12 @@ public class GameRoom implements Runnable {
 
     public synchronized void putAction(Session player, int i, int j) {
         ChessAction action;
-        if (player == whitePlayer) {
+        if (player == whitePlayer && gameStatus == GameStatus.WHITE_WAITING) {
             action = new ChessAction(i, j, ChessMap.MapPointEnum.CHESS_WHITE);
-        } else if (player == blackPlayer) {
+        } else if (player == blackPlayer && gameStatus == GameStatus.BLACK_WAITING) {
             action = new ChessAction(i, j, ChessMap.MapPointEnum.CHESS_BLACK);
         } else {
-            throw new IllegalArgumentException("该玩家" + player.getId() + "不在房间里，不能落子");
+            throw new IllegalArgumentException("玩家" + player.getId() + "非法操作，不能落子");
         }
         chessAction = action;
     }

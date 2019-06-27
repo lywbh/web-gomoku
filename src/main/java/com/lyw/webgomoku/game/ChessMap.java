@@ -1,12 +1,12 @@
 package com.lyw.webgomoku.game;
 
+import com.lyw.webgomoku.game.utils.ChessUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.util.Assert;
 
 public class ChessMap {
 
     private static final int MAP_WIDTH = 15;
-    private static final int MAP_HEIGHT = 15;
 
     @AllArgsConstructor
     public enum MapPointEnum {
@@ -22,9 +22,9 @@ public class ChessMap {
     private int blackCount;
 
     public ChessMap() {
-        map = new MapPointEnum[MAP_WIDTH][MAP_HEIGHT];
+        map = new MapPointEnum[MAP_WIDTH][MAP_WIDTH];
         for (int i = 0; i < MAP_WIDTH; ++i) {
-            for (int j = 0; j < MAP_HEIGHT; ++j) {
+            for (int j = 0; j < MAP_WIDTH; ++j) {
                 map[i][j] = MapPointEnum.EMPTY;
             }
         }
@@ -36,9 +36,9 @@ public class ChessMap {
         if (map == null) {
             return null;
         }
-        int[][] m = new int[MAP_WIDTH][MAP_HEIGHT];
+        int[][] m = new int[MAP_WIDTH][MAP_WIDTH];
         for (int i = 0; i < MAP_WIDTH; ++i) {
-            for (int j = 0; j < MAP_HEIGHT; ++j) {
+            for (int j = 0; j < MAP_WIDTH; ++j) {
                 m[i][j] = map[i][j].code;
             }
         }
@@ -59,12 +59,11 @@ public class ChessMap {
     }
 
     /**
-     * 检查是否有连成五子，传入上次落子，只扫描周围11x11的范围
+     * 检查是否有连成五子，传入上次落子
      */
     public boolean checkFive(ChessAction chessAction) {
         pointCheck(chessAction);
-        // TODO 检查算法
-        return false;
+        return ChessUtils.dudgeWin(map, MAP_WIDTH, chessAction.getI(), chessAction.getJ());
     }
 
     /**
@@ -72,7 +71,7 @@ public class ChessMap {
      * @return 是否结束
      */
     public boolean checkFull() {
-        return whiteCount + blackCount >= MAP_WIDTH * MAP_HEIGHT;
+        return whiteCount + blackCount >= MAP_WIDTH * MAP_WIDTH;
     }
 
     /**
@@ -83,7 +82,7 @@ public class ChessMap {
         int j = chessAction.getJ();
         MapPointEnum point = chessAction.getPoint();
         Assert.isTrue(point != MapPointEnum.EMPTY, "落子类型有误");
-        Assert.isTrue(i >= 0 && i <= MAP_WIDTH && j >= 0 && j <= MAP_HEIGHT, "落子范围有误");
+        Assert.isTrue(i >= 0 && i <= MAP_WIDTH && j >= 0 && j <= MAP_WIDTH, "落子范围有误");
         Assert.isTrue(map[i][j] == MapPointEnum.EMPTY, "落子位置重复");
     }
 
