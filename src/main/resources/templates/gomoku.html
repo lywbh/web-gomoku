@@ -56,6 +56,7 @@
     };
     websocket.onclose = function () {
         console.log("连接关闭");
+        document.getElementById("statusText").innerText = "connection closed, please refresh";
     };
     window.onbeforeunload = function () {
         websocket.close();

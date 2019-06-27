@@ -80,12 +80,13 @@ public class GameRoom implements Runnable {
         chessMap = null;
         if (whitePlayer != null && whitePlayer == player) {
             whitePlayer = null;
+            playerIn.remove(player);
         } else if (blackPlayer != null && blackPlayer == player) {
             blackPlayer = null;
+            playerIn.remove(player);
         } else {
             throw new IllegalArgumentException("该玩家" + player.getId() + "不在房间里，不能退出");
         }
-        playerIn.remove(player);
         if (whitePlayer == null && blackPlayer == null) {
             gameStatus = GameStatus.TERMINAL;
         } else {
@@ -184,8 +185,12 @@ public class GameRoom implements Runnable {
      */
     private void closeRoom() {
         if (playerIn != null) {
-            playerIn.remove(blackPlayer);
-            playerIn.remove(whitePlayer);
+            if (blackPlayer != null) {
+                playerIn.remove(blackPlayer);
+            }
+            if (whitePlayer != null) {
+                playerIn.remove(whitePlayer);
+            }
         }
         if (roomMap != null) {
             roomMap.remove(roomId);
