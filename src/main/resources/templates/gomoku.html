@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.springframework.org/schema/mvc">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
+    <title>五子棋</title>
+</head>
+<body style="text-align: center">
+<canvas id="gameMap" width="500" height="500" tabindex="0" style="border:1px solid #000000;">不支持canvas</canvas>
+</body>
+<script type="text/javascript" th:inline="javascript">
+    // 适配手机
+    let ua = navigator.userAgent;
+    let system = {
+        win: false,
+        mac: false,
+        x11: false,
+        //mobile
+        iphone: false,
+        ipad: false,
+        ios: false,
+        android: false,
+        winMobile: false
+    };
+    let p = navigator.platform;
+    system.win = p.indexOf('Win') === 0;
+    system.mac = p.indexOf('Mac') === 0;
+    system.x11 = (p === 'x11') || (p.indexOf('Linux') === 0);
+    system.iphone = ua.indexOf('iPhone') > -1;
+    system.ipad = ua.indexOf('iPad') > -1;
+    system.android = ua.indexOf('Android') > -1;
+
+    // 棋盘
+    let gameMap = document.getElementById("gameMap");
+    let viewWidth = window.innerWidth || document.documentElement.clientWidth;
+    if (!(system.win || system.mac || system.x11)) {
+        gameMap.width = viewWidth * 0.9;
+        gameMap.height = viewWidth * 0.9;
+    }
+    let ctx = gameMap.getContext("2d");
+
+    // 连接
+    let websocket = null;
+    if ('WebSocket' in window) {
+        websocket = new WebSocket("ws://" + location.host + "/gomoku");
+    } else {
+        alert('您的浏览器不支持WebSocket，无法开始游戏')
+    }
+    websocket.onerror = function () {
+        alert("连接发生异常");
+    };
+    websocket.onopen = function (event) {
+        console.log("连接成功");
+    };
+    websocket.onclose = function () {
+        console.log("连接关闭");
+    };
+    window.onbeforeunload = function () {
+        websocket.close();
+    };
+
+    // 游戏逻辑-接收消息
+    websocket.onmessage = function (message) {
+        // TODO 收到游戏状态和棋盘状态推送，做渲染
+    };
+
+    // 游戏逻辑-发送消息
+    gameMap.addEventListener('click', function doClick(e) {
+        // TODO 鼠标点击，判断棋子落点(x, y)，请求后端
+    }, true);
+    gameMap.focus();
+</script>
+</html>

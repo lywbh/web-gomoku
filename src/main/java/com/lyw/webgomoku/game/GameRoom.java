@@ -39,6 +39,8 @@ public class GameRoom implements Runnable {
     public GameRoom(String roomId) {
         this.roomId = roomId;
         gameStatus = GameStatus.PREPARE;
+        ThreadPool.gamePool.submit(this);
+        roomMap.put(roomId, this);
     }
 
     /**

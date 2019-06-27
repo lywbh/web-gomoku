@@ -1,7 +1,6 @@
 package com.lyw.webgomoku.connect;
 
 import com.alibaba.fastjson.JSON;
-import com.lyw.webgomoku.config.ThreadPool;
 import com.lyw.webgomoku.connect.dto.MessageReceive;
 import com.lyw.webgomoku.connect.dto.type.MessageTypeEnum;
 import com.lyw.webgomoku.game.GameRoom;
@@ -47,8 +46,6 @@ public class SocketHandler {
                 // 房间号不存在，先创建一个空房间
                 if (currentRoom == null) {
                     currentRoom = new GameRoom(roomId);
-                    ThreadPool.gamePool.submit(currentRoom);
-                    roomMap.put(roomId, currentRoom);
                 }
                 // 加入房间
                 currentRoom.join(session);
