@@ -39,11 +39,33 @@
     }
     const unitWidth = gameMap.width / 15;
     const unitHeight = gameMap.height / 15;
+    let ctx = gameMap.getContext("2d");
+
+    function redraw() {
+        ctx.clearRect(0, 0, gameMap.width, gameMap.height);
+        for (let col = 1; col < 16; col++) {
+            ctx.beginPath();
+            ctx.moveTo(unitWidth * (col - 0.5), unitWidth * 0.5);
+            ctx.lineTo(unitWidth * (col - 0.5), gameMap.width - unitWidth * 0.5);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(unitWidth * 0.5, unitWidth * (col - 0.5));
+            ctx.lineTo(gameMap.width - unitWidth * 0.5, unitWidth * (col - 0.5));
+            ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(7.5 * unitHeight, 7.5 * unitWidth, 0.1 * unitWidth, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.fillStyle = "#000000";
+        ctx.fill();
+    }
+
+    redraw();
 
     // 连接
     let websocket = null;
     if ('WebSocket' in window) {
-        websocket = new WebSocket("ws://" + location.host + "/gomoku");
+        websocket = new WebSocket("ws://" + "119.3.252.58:8080" + "/gomoku");
     } else {
         alert('您的浏览器不支持WebSocket，无法开始游戏')
     }
@@ -70,19 +92,24 @@
     }
 
     // 游戏逻辑-接收消息
-    let ctx = gameMap.getContext("2d");
     websocket.onmessage = function (message) {
-        ctx.clearRect(0, 0, gameMap.width, gameMap.height);
+        redraw();
         let data = JSON.parse(message.data);
         if (data.map != null) {
             for (let i = 0; i < data.map.length; i++) {
                 for (let j = 0; j < data.map[i].length; j++) {
                     if (data.map[i][j] === 2) {
-                        ctx.fillStyle = "#FF0000";
-                        ctx.fillRect(j * unitHeight, i * unitWidth, unitHeight, unitWidth);
+                        ctx.beginPath();
+                        ctx.arc((j + 0.5) * unitHeight, (i + 0.5) * unitWidth, 0.4 * unitWidth, 0, 2 * Math.PI);
+                        ctx.stroke();
+                        ctx.fillStyle = "#333333";
+                        ctx.fill();
                     } else if (data.map[i][j] === 1) {
-                        ctx.fillStyle = "#0000FF";
-                        ctx.fillRect(j * unitHeight, i * unitWidth, unitHeight, unitWidth);
+                        ctx.beginPath();
+                        ctx.arc((j + 0.5) * unitHeight, (i + 0.5) * unitWidth, 0.4 * unitWidth, 0, 2 * Math.PI);
+                        ctx.stroke();
+                        ctx.fillStyle = "#EEEEEE";
+                        ctx.fill();
                     }
                 }
             }
@@ -92,10 +119,10 @@
         } else if (data.gameStatus === '1' || data.gameStatus === '2') {
             document.getElementById("statusText").innerText = "game started";
         } else if (data.gameStatus === '3') {
-            document.getElementById("statusText").innerText = "blue win";
+            document.getElementById("statusText").innerText = "white win";
             setTimeout(join, 3000);
         } else if (data.gameStatus === '4') {
-            document.getElementById("statusText").innerText = "red win";
+            document.getElementById("statusText").innerText = "black win";
             setTimeout(join, 3000);
         } else if (data.gameStatus === '5') {
             document.getElementById("statusText").innerText = "draw";
