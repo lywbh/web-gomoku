@@ -65,7 +65,7 @@
     // 连接
     let websocket = null;
     if ('WebSocket' in window) {
-        websocket = new WebSocket("ws://" + "119.3.252.58:8080" + "/gomoku");
+        websocket = new WebSocket("ws://" + location.host + "/gomoku");
     } else {
         alert('您的浏览器不支持WebSocket，无法开始游戏')
     }
