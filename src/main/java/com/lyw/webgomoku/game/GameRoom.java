@@ -49,8 +49,9 @@ public class GameRoom implements Runnable {
      * @param player 玩家的session
      */
     public synchronized void join(Session player) {
+        System.out.println("room-" + roomId + "：" + "玩家" + player.getId() + "进入房间");
         if (gameStatus == GameStatus.TERMINAL) {
-            throw new IllegalStateException("房间正在清理，请稍后");
+            throw new IllegalStateException("roomId" + roomId + "：" + "游戏已结束，玩家" + player.getId() + "进入房间失败");
         }
         if (whitePlayer == null && blackPlayer == null) {
             whitePlayer = player;
@@ -59,7 +60,7 @@ public class GameRoom implements Runnable {
         } else if (blackPlayer == null) {
             blackPlayer = player;
         } else {
-            throw new IllegalStateException("房间已满，不允许加入");
+            throw new IllegalStateException("roomId" + roomId + "：" + "房间已满，玩家" + player.getId() + "进入房间失败");
         }
         playerIn.put(player, roomId);
         if (whitePlayer != null && blackPlayer != null) {
@@ -74,8 +75,9 @@ public class GameRoom implements Runnable {
      * @param player 玩家的session
      */
     public synchronized void quit(Session player) {
+        System.out.println("room-" + roomId + "：" + "玩家" + player.getId() + "退出房间");
         if (gameStatus == GameStatus.TERMINAL) {
-            throw new IllegalStateException("游戏已结束");
+            throw new IllegalStateException("roomId" + roomId + "：" + "游戏已结束，玩家" + player.getId() + "退出房间失败");
         }
         chessMap = null;
         if (whitePlayer != null && whitePlayer == player) {
@@ -85,7 +87,7 @@ public class GameRoom implements Runnable {
             blackPlayer = null;
             playerIn.remove(player);
         } else {
-            throw new IllegalArgumentException("该玩家" + player.getId() + "不在房间里，不能退出");
+            throw new IllegalArgumentException("roomId" + roomId + "：" + "玩家" + player.getId() + "不在房间里，不能退出");
         }
         if (whitePlayer == null && blackPlayer == null) {
             gameStatus = GameStatus.TERMINAL;
@@ -95,13 +97,14 @@ public class GameRoom implements Runnable {
     }
 
     public synchronized void putAction(Session player, int i, int j) {
+        System.out.println("room-" + roomId + "：" + "玩家" + player.getId() + "在（" + i + "，" + j + "）处落子");
         ChessAction action;
         if (player == whitePlayer && gameStatus == GameStatus.WHITE_WAITING) {
             action = new ChessAction(i, j, ChessMap.MapPointEnum.CHESS_WHITE);
         } else if (player == blackPlayer && gameStatus == GameStatus.BLACK_WAITING) {
             action = new ChessAction(i, j, ChessMap.MapPointEnum.CHESS_BLACK);
         } else {
-            throw new IllegalArgumentException("玩家" + player.getId() + "非法操作，不能落子");
+            throw new IllegalArgumentException("roomId" + roomId + "：" + "玩家" + player.getId() + "当前不能落子");
         }
         chessAction = action;
     }
@@ -214,14 +217,21 @@ public class GameRoom implements Runnable {
 
     private void pushCurrent() {
         try {
-            if (whitePlayer != null) {
-                whitePlayer.getAsyncRemote().sendText(JSON.toJSONString(currentStatus()));
-            }
-            if (blackPlayer != null) {
-                blackPlayer.getAsyncRemote().sendText(JSON.toJSONString(currentStatus()));
-            }
+            checkAndPush(whitePlayer);
+            checkAndPush(blackPlayer);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void checkAndPush(Session player) {
+        if (player != null) {
+            if (player.isOpen()) {
+                player.getAsyncRemote().sendText(JSON.toJSONString(currentStatus()));
+            } else {
+                System.out.println("room-" + roomId + "：" + "发现玩家" + player.getId() + "意外断开，把这个用户踢出");
+                quit(player);
+            }
         }
     }
 

@@ -18,11 +18,12 @@ public class SocketHandler {
 
     @OnOpen
     public void onOpen(Session session) {
-        playerSet.add(session);
+        System.out.println("玩家" + session.getId() + "建立连接");
     }
 
     @OnClose
     public void onClose(Session session) {
+        System.out.println("玩家" + session.getId() + "断开连接");
         // 玩家断开连接时，检查玩家是否正在一个房间里，如果是要主动退出
         String roomId = playerIn.get(session);
         if (roomId != null) {
@@ -31,7 +32,6 @@ public class SocketHandler {
                 room.quit(session);
             }
         }
-        playerSet.remove(session);
     }
 
     @OnError
@@ -58,15 +58,19 @@ public class SocketHandler {
                     break;
                 case QUIT:
                     // 退出房间
-                    GameRoom currentRoom = roomMap.get(playerIn.get(session));
-                    Assert.isTrue(currentRoom != null, "非法请求，该玩家" + session.getId() + "未加入任何房间");
-                    currentRoom.quit(session);
+                    roomId = playerIn.get(session);
+                    Assert.isTrue(roomId != null, "非法请求，该玩家" + session.getId() + "未加入任何房间");
+                    GameRoom room2Quit = roomMap.get(roomId);
+                    Assert.isTrue(room2Quit != null, "非法请求，该玩家" + session.getId() + "的房间找不到了");
+                    room2Quit.quit(session);
                     break;
                 case PUT_CHESS:
                     // 下棋
-                    currentRoom = roomMap.get(playerIn.get(session));
-                    Assert.isTrue(currentRoom != null, "非法请求，该玩家" + session.getId() + "未加入任何房间");
-                    currentRoom.putAction(session, recvMessage.getI(), recvMessage.getJ());
+                    roomId = playerIn.get(session);
+                    Assert.isTrue(roomId != null, "非法请求，该玩家" + session.getId() + "未加入任何房间");
+                    GameRoom room2Put = roomMap.get(roomId);
+                    Assert.isTrue(room2Put != null, "非法请求，该玩家" + session.getId() + "的房间找不到了");
+                    room2Put.putAction(session, recvMessage.getI(), recvMessage.getJ());
                     break;
             }
         } catch (Exception e) {
