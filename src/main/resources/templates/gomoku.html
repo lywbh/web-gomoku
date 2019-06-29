@@ -99,6 +99,7 @@
     function quit() {
         if (confirm('要退出房间吗？')) {
             websocket.send(JSON.stringify({"type": "2"}));
+            redraw();
             renderStatus(" ");
         }
     }
@@ -108,26 +109,34 @@
     }
 
     // 游戏逻辑-接收消息
+    let currentMap;
     websocket.onmessage = function (message) {
-        redraw();
         let data = JSON.parse(message.data);
         // 接到消息以后先尝试渲染棋盘
-        if (data.map != null) {
+        let diff = calcDiff(data.map, currentMap);
+        if (diff) {
+            currentMap = data.map;
+            redraw();
             for (let i = 0; i < data.map.length; i++) {
                 for (let j = 0; j < data.map[i].length; j++) {
-                    if (data.map[i][j] === 2) {
-                        ctx.beginPath();
-                        ctx.arc((j + 0.5) * unitHeight, (i + 0.5) * unitWidth, 0.4 * unitWidth, 0, 2 * Math.PI);
-                        ctx.stroke();
-                        ctx.fillStyle = "#333333";
-                        ctx.fill();
-                    } else if (data.map[i][j] === 1) {
-                        ctx.beginPath();
-                        ctx.arc((j + 0.5) * unitHeight, (i + 0.5) * unitWidth, 0.4 * unitWidth, 0, 2 * Math.PI);
-                        ctx.stroke();
-                        ctx.fillStyle = "#EEEEEE";
-                        ctx.fill();
+                    if (data.map[i][j] === 0) {
+                        continue;
                     }
+                    ctx.beginPath();
+                    let r;
+                    if (i === diff.i && j === diff.j) {
+                        r = 0.5 * unitWidth;
+                    } else {
+                        r = 0.4 * unitWidth;
+                    }
+                    ctx.arc((j + 0.5) * unitHeight, (i + 0.5) * unitWidth, r, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    if (data.map[i][j] === 1) {
+                        ctx.fillStyle = "#EEEEEE";
+                    } else if (data.map[i][j] === 2) {
+                        ctx.fillStyle = "#333333";
+                    }
+                    ctx.fill();
                 }
             }
         }
@@ -156,6 +165,28 @@
             }, 3000);
         }
     };
+
+    function calcDiff(newMap, oldMap) {
+        if (newMap && !oldMap) {
+            for (let i = 0; i < newMap.length; ++i) {
+                for (let j = 0; j < newMap[i].length; j++) {
+                    if (newMap[i][j] !== 0) {
+                        return {"i": i, "j": j};
+                    }
+                }
+            }
+        } else if (newMap) {
+            for (let i = 0; i < newMap.length; ++i) {
+                for (let j = 0; j < newMap[i].length; j++) {
+                    if (newMap[i][j] !== oldMap[i][j]) {
+                        return {"i": i, "j": j};
+                    }
+                }
+            }
+        } else {
+            return null;
+        }
+    }
 
     // 游戏逻辑-发送消息
     gameMap.addEventListener('click', function doClick(e) {
