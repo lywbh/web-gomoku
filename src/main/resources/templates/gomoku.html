@@ -5,7 +5,14 @@
     <title>五子棋</title>
 </head>
 <body style="text-align: center">
+<br>
+<div>
+    <input id="btnJoin" type="button" value="加入房间" onclick="join()">
+    <input id="btnQuit" type="button" value="退出房间" onclick="quit()">
+</div>
+<br>
 <canvas id="gameMap" width="500" height="500" tabindex="0" style="border:1px solid #000000;">不支持canvas</canvas>
+<br>
 <div id="statusText" style="text-align: center;"></div>
 </body>
 <script type="text/javascript" th:inline="javascript">
@@ -74,7 +81,6 @@
     };
     websocket.onopen = function () {
         console.log("连接成功");
-        join();
     };
     websocket.onclose = function () {
         console.log("连接关闭");
@@ -84,17 +90,28 @@
         websocket.close();
     };
 
-    // 游戏逻辑-加入游戏
+    // 游戏逻辑-加入/退出房间
     function join() {
         let roomId = prompt('请输入要加入的房间号');
         websocket.send(JSON.stringify({"type": "1", "roomId": roomId}));
-        document.getElementById("statusText").innerText = "";
+    }
+
+    function quit() {
+        if (confirm('要退出房间吗？')) {
+            websocket.send(JSON.stringify({"type": "2"}));
+            renderStatus(" ");
+        }
+    }
+
+    function renderStatus(value) {
+        document.getElementById("statusText").innerText = value;
     }
 
     // 游戏逻辑-接收消息
     websocket.onmessage = function (message) {
         redraw();
         let data = JSON.parse(message.data);
+        // 接到消息以后先尝试渲染棋盘
         if (data.map != null) {
             for (let i = 0; i < data.map.length; i++) {
                 for (let j = 0; j < data.map[i].length; j++) {
@@ -114,19 +131,29 @@
                 }
             }
         }
+        // 再根据游戏状态展示
         if (data.gameStatus === '0') {
-            document.getElementById("statusText").innerText = "waiting player";
+            renderStatus("waiting player");
         } else if (data.gameStatus === '1' || data.gameStatus === '2') {
-            document.getElementById("statusText").innerText = "game started";
+            renderStatus("game started");
         } else if (data.gameStatus === '3') {
-            document.getElementById("statusText").innerText = "white win";
-            setTimeout(join, 3000);
+            renderStatus("white win");
+            setTimeout(function () {
+                renderStatus(" ");
+                redraw();
+            }, 3000);
         } else if (data.gameStatus === '4') {
-            document.getElementById("statusText").innerText = "black win";
-            setTimeout(join, 3000);
+            renderStatus("black win");
+            setTimeout(function () {
+                renderStatus(" ");
+                redraw();
+            }, 3000);
         } else if (data.gameStatus === '5') {
-            document.getElementById("statusText").innerText = "draw";
-            setTimeout(join, 3000);
+            renderStatus("draw");
+            setTimeout(function () {
+                renderStatus(" ");
+                redraw();
+            }, 3000);
         }
     };
 
