@@ -1,9 +1,9 @@
-package com.lyw.webgomoku.connect;
+package com.lyw.webgomoku.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.lyw.webgomoku.connect.dto.MessageReceive;
-import com.lyw.webgomoku.connect.dto.type.MessageTypeEnum;
+import com.lyw.webgomoku.dto.type.MessageTypeEnum;
 import com.lyw.webgomoku.game.GameRoom;
+import com.lyw.webgomoku.dto.MessageReceive;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.thymeleaf.util.StringUtils;
@@ -11,11 +11,12 @@ import org.thymeleaf.util.StringUtils;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 
-import static com.lyw.webgomoku.connect.PlayerManager.*;
+import static com.lyw.webgomoku.game.PlayerManager.playerIn;
+import static com.lyw.webgomoku.game.PlayerManager.roomMap;
 
 @Component
 @ServerEndpoint(value = "/gomoku")
-public class SocketHandler {
+public class SocketEndpoint {
 
     @OnOpen
     public void onOpen(Session session) {
@@ -25,7 +26,6 @@ public class SocketHandler {
     @OnClose
     public void onClose(Session session) {
         System.out.println("玩家" + session.getId() + "断开连接");
-        // 玩家断开连接时，检查玩家是否正在一个房间里，如果是要主动退出
         String roomId = playerIn.get(session);
         if (roomId != null) {
             GameRoom room = roomMap.get(roomId);
@@ -42,6 +42,7 @@ public class SocketHandler {
 
     @OnMessage
     public synchronized void onMessage(String message, Session session) {
+        System.out.println("玩家" + session.getId() + "请求消息：" + message);
         try {
             MessageReceive recvMessage = JSON.parseObject(message, MessageReceive.class);
             switch (MessageTypeEnum.getTypeByCode(recvMessage.getType())) {

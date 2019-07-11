@@ -21,7 +21,7 @@ public class ChessMap {
     private int whiteCount;
     private int blackCount;
 
-    public ChessMap() {
+    ChessMap() {
         map = new MapPointEnum[MAP_WIDTH][MAP_WIDTH];
         for (int i = 0; i < MAP_WIDTH; ++i) {
             for (int j = 0; j < MAP_WIDTH; ++j) {
@@ -32,7 +32,7 @@ public class ChessMap {
         blackCount = 0;
     }
 
-    public int[][] getMap() {
+    int[][] getMap() {
         if (map == null) {
             return null;
         }
@@ -48,7 +48,7 @@ public class ChessMap {
     /**
      * 落子
      */
-    public void put(ChessAction chessAction) {
+    void put(ChessAction chessAction) {
         pointCheck(chessAction);
         map[chessAction.getI()][chessAction.getJ()] = chessAction.getPoint();
         if (chessAction.getPoint() == MapPointEnum.CHESS_WHITE) {
@@ -61,7 +61,7 @@ public class ChessMap {
     /**
      * 检查是否有连成五子，传入上次落子
      */
-    public boolean checkFive(ChessAction chessAction) {
+    boolean checkFive(ChessAction chessAction) {
         return ChessUtils.dudgeWin(map, MAP_WIDTH, chessAction.getI(), chessAction.getJ());
     }
 
@@ -69,7 +69,7 @@ public class ChessMap {
      * 检查棋盘是否已满
      * @return 是否结束
      */
-    public boolean checkFull() {
+    boolean checkFull() {
         return whiteCount + blackCount >= MAP_WIDTH * MAP_WIDTH;
     }
 

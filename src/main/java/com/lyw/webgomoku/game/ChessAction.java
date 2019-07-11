@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class ChessAction {
+class ChessAction {
 
     private int i;
     private int j;

@@ -1,26 +1,19 @@
 package com.lyw.webgomoku.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Configuration
 public class ThreadPoolConfig {
 
-    @Bean
-    public ExecutorService gamePool() {
-        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                60L, TimeUnit.SECONDS, new SynchronousQueue<>());
-    }
+    private static ThreadFactory gameThreadFactory = new GameThreadFactory();
 
-    @Bean
-    public ExecutorService watcherPool() {
-        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                60L, TimeUnit.SECONDS, new SynchronousQueue<>());
-    }
+    public static ExecutorService gamePool = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+            60L, TimeUnit.SECONDS, new SynchronousQueue<>(), gameThreadFactory);
+
+
+    public static ExecutorService watcherPool = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+            60L, TimeUnit.SECONDS, new SynchronousQueue<>(), gameThreadFactory);
 
 }

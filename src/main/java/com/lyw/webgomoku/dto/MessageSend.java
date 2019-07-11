@@ -1,4 +1,4 @@
-package com.lyw.webgomoku.connect.dto;
+package com.lyw.webgomoku.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,6 +1,4 @@
-package com.lyw.webgomoku.connect;
-
-import com.lyw.webgomoku.game.GameRoom;
+package com.lyw.webgomoku.game;
 
 import javax.websocket.Session;
 import java.util.Map;
