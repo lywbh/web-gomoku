@@ -13,7 +13,7 @@ public enum MessageTypeEnum {
 
     private String code;
 
-    public static MessageTypeEnum getTypeByCode(String code, Class<MessageTypeEnum> clazz) {
+    public static MessageTypeEnum getTypeByCode(String code) {
         MessageTypeEnum obj = null;
         for (MessageTypeEnum e : MessageTypeEnum.values()) {
             if (e.getCode().equals(code)) {

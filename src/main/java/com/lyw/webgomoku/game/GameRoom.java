@@ -1,11 +1,13 @@
 package com.lyw.webgomoku.game;
 
 import com.alibaba.fastjson.JSON;
-import com.lyw.webgomoku.config.ThreadPool;
 import com.lyw.webgomoku.connect.dto.MessageSend;
 import lombok.AllArgsConstructor;
 
+import javax.annotation.Resource;
 import javax.websocket.Session;
+
+import java.util.concurrent.ExecutorService;
 
 import static com.lyw.webgomoku.connect.PlayerManager.*;
 
@@ -24,6 +26,11 @@ public class GameRoom implements Runnable {
         private String code;
     }
 
+    @Resource
+    private ExecutorService gamePool;
+    @Resource
+    private ExecutorService watcherPool;
+
     private String roomId;
 
     private Session whitePlayer;
@@ -39,7 +46,7 @@ public class GameRoom implements Runnable {
     public GameRoom(String roomId) {
         this.roomId = roomId;
         gameStatus = GameStatus.PREPARE;
-        ThreadPool.gamePool.submit(this);
+        gamePool.submit(this);
         roomMap.put(roomId, this);
     }
 
@@ -171,6 +178,8 @@ public class GameRoom implements Runnable {
                     case TERMINAL:
                         // TERMINAL会直接跳出，不会有这个情况
                         break;
+                    default:
+                        break;
                 }
             }
             // 停一会让出CPU
@@ -204,7 +213,7 @@ public class GameRoom implements Runnable {
      * 定时推送房间状态、棋盘信息
      */
     private void enableWatcher() {
-        ThreadPool.watcherPool.submit(() -> {
+        watcherPool.submit(() -> {
             while (gameStatus != GameStatus.TERMINAL) {
                 pushCurrent();
                 try {

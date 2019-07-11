@@ -43,7 +43,7 @@ public class SocketHandler {
     public synchronized void onMessage(String message, Session session) {
         try {
             MessageReceive recvMessage = JSON.parseObject(message, MessageReceive.class);
-            switch (MessageTypeEnum.getTypeByCode(recvMessage.getType(), MessageTypeEnum.class)) {
+            switch (MessageTypeEnum.getTypeByCode(recvMessage.getType())) {
                 case JOIN:
                     String roomId = recvMessage.getRoomId();
                     if (roomId != null) {
@@ -71,6 +71,8 @@ public class SocketHandler {
                     GameRoom room2Put = roomMap.get(roomId);
                     Assert.isTrue(room2Put != null, "非法请求，该玩家" + session.getId() + "的房间找不到了");
                     room2Put.putAction(session, recvMessage.getI(), recvMessage.getJ());
+                    break;
+                default:
                     break;
             }
         } catch (Exception e) {
