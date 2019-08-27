@@ -5,10 +5,7 @@ import com.lyw.webgomoku.config.ThreadPoolConfig;
 import com.lyw.webgomoku.dto.MessageSend;
 import lombok.AllArgsConstructor;
 
-import javax.annotation.Resource;
 import javax.websocket.Session;
-
-import java.util.concurrent.ExecutorService;
 
 import static com.lyw.webgomoku.game.PlayerManager.*;
 
