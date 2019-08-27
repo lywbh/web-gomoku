@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.lyw.webgomoku.dto.type.MessageTypeEnum;
 import com.lyw.webgomoku.game.GameRoom;
 import com.lyw.webgomoku.dto.MessageReceive;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.thymeleaf.util.StringUtils;
@@ -14,18 +15,19 @@ import javax.websocket.server.ServerEndpoint;
 import static com.lyw.webgomoku.game.PlayerManager.playerIn;
 import static com.lyw.webgomoku.game.PlayerManager.roomMap;
 
+@Slf4j
 @Component
 @ServerEndpoint(value = "/gomoku")
 public class SocketEndpoint {
 
     @OnOpen
     public void onOpen(Session session) {
-        System.out.println("玩家" + session.getId() + "建立连接");
+        log.info("玩家" + session.getId() + "建立连接");
     }
 
     @OnClose
     public void onClose(Session session) {
-        System.out.println("玩家" + session.getId() + "断开连接");
+        log.info("玩家" + session.getId() + "断开连接");
         String roomId = playerIn.get(session);
         if (roomId != null) {
             GameRoom room = roomMap.get(roomId);
@@ -37,12 +39,12 @@ public class SocketEndpoint {
 
     @OnError
     public void onError(Throwable e) {
-        e.printStackTrace();
+        log.error("连接异常", e);
     }
 
     @OnMessage
     public synchronized void onMessage(String message, Session session) {
-        System.out.println("玩家" + session.getId() + "请求消息：" + message);
+        log.info("玩家" + session.getId() + "请求消息：" + message);
         try {
             MessageReceive recvMessage = JSON.parseObject(message, MessageReceive.class);
             switch (MessageTypeEnum.getTypeByCode(recvMessage.getType())) {
@@ -79,7 +81,7 @@ public class SocketEndpoint {
                     break;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("玩家" + session.getId() + "消息处理异常", e);
         }
     }
 

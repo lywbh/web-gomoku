@@ -4,4 +4,4 @@
 
 #### 感谢猪尾巴友情赞助的棋盘
 
-![sample](https://puu.sh/Ea2Hq/7656c9ad61.png)
+![sample](https://puu.sh/Ea5xA/f38df704cf.png)

@@ -47,6 +47,10 @@
     const unitWidth = gameMap.width / 15;
     const unitHeight = gameMap.height / 15;
     let ctx = gameMap.getContext("2d");
+    ctx.shadowColor = "#7AABCC";
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 0;
 
     function redraw() {
         ctx.clearRect(0, 0, gameMap.width, gameMap.height);
@@ -123,13 +127,10 @@
                         continue;
                     }
                     ctx.beginPath();
-                    let r;
                     if (i === diff.i && j === diff.j) {
-                        r = 0.5 * unitWidth;
-                    } else {
-                        r = 0.4 * unitWidth;
+                        ctx.shadowBlur = 10;
                     }
-                    ctx.arc((j + 0.5) * unitHeight, (i + 0.5) * unitWidth, r, 0, 2 * Math.PI);
+                    ctx.arc((j + 0.5) * unitHeight, (i + 0.5) * unitWidth, 0.4 * unitWidth, 0, 2 * Math.PI);
                     ctx.stroke();
                     if (data.map[i][j] === 1) {
                         ctx.fillStyle = "#EEEEEE";
@@ -137,6 +138,7 @@
                         ctx.fillStyle = "#333333";
                     }
                     ctx.fill();
+                    ctx.shadowBlur = 0;
                 }
             }
         }

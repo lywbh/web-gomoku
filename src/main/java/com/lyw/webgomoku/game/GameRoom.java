@@ -4,11 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.lyw.webgomoku.config.ThreadPoolConfig;
 import com.lyw.webgomoku.dto.MessageSend;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.websocket.Session;
 
 import static com.lyw.webgomoku.game.PlayerManager.*;
 
+@Slf4j
 public class GameRoom implements Runnable {
 
     @AllArgsConstructor
@@ -49,7 +51,7 @@ public class GameRoom implements Runnable {
      * @param player 玩家的session
      */
     public synchronized void join(Session player) {
-        System.out.println("room-" + roomId + "：" + "玩家" + player.getId() + "进入房间");
+        log.info("room-" + roomId + "：" + "玩家" + player.getId() + "进入房间");
         if (gameStatus == GameStatus.TERMINAL) {
             throw new IllegalStateException("roomId" + roomId + "：" + "游戏已结束，玩家" + player.getId() + "进入房间失败");
         }
@@ -76,7 +78,7 @@ public class GameRoom implements Runnable {
      * @param player 玩家的session
      */
     public synchronized void quit(Session player) {
-        System.out.println("room-" + roomId + "：" + "玩家" + player.getId() + "退出房间");
+        log.info("room-" + roomId + "：" + "玩家" + player.getId() + "退出房间");
         if (gameStatus == GameStatus.TERMINAL) {
             throw new IllegalStateException("roomId" + roomId + "：" + "游戏已结束，玩家" + player.getId() + "退出房间失败");
         }
@@ -88,7 +90,7 @@ public class GameRoom implements Runnable {
             blackPlayer = null;
             playerIn.remove(player);
         } else {
-            throw new IllegalArgumentException("roomId" + roomId + "：" + "玩家" + player.getId() + "不在房间里，不能退出");
+            throw new IllegalStateException("roomId" + roomId + "：" + "玩家" + player.getId() + "不在房间里，不能退出");
         }
         if (whitePlayer == null && blackPlayer == null) {
             gameStatus = GameStatus.TERMINAL;
@@ -99,14 +101,15 @@ public class GameRoom implements Runnable {
     }
 
     public synchronized void putAction(Session player, int i, int j) {
-        System.out.println("room-" + roomId + "：" + "玩家" + player.getId() + "在（" + i + "，" + j + "）处落子");
+        log.info("room-" + roomId + "：" + "玩家" + player.getId() + "在（" + i + "，" + j + "）处落子");
         ChessAction action;
         if (player == whitePlayer && gameStatus == GameStatus.WHITE_WAITING) {
             action = new ChessAction(i, j, ChessMap.MapPointEnum.CHESS_WHITE);
         } else if (player == blackPlayer && gameStatus == GameStatus.BLACK_WAITING) {
             action = new ChessAction(i, j, ChessMap.MapPointEnum.CHESS_BLACK);
         } else {
-            throw new IllegalArgumentException("roomId" + roomId + "：" + "玩家" + player.getId() + "当前不能落子");
+            log.warn("roomId" + roomId + "：" + "玩家" + player.getId() + "当前不能落子");
+            return;
         }
         chessAction = action;
         notify();
@@ -128,7 +131,6 @@ public class GameRoom implements Runnable {
                             // 检查有无落白子的动作
                             if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_WHITE) {
                                 chessMap.put(chessAction);
-                                // 落子完成后检查结果
                                 if (chessMap.checkFive(chessAction)) {
                                     gameStatus = GameStatus.WHITE_WIN;
                                     break MainLoop;
@@ -145,7 +147,6 @@ public class GameRoom implements Runnable {
                             // 检查有无落黑子的动作
                             if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_BLACK) {
                                 chessMap.put(chessAction);
-                                // 落子完成后检查结果
                                 if (chessMap.checkFive(chessAction)) {
                                     gameStatus = GameStatus.BLACK_WIN;
                                     break MainLoop;
@@ -158,17 +159,12 @@ public class GameRoom implements Runnable {
                                 }
                             }
                             break;
-                        case WHITE_WIN:
-                        case BLACK_WIN:
-                        case DRAW:
-                        case TERMINAL:
-                            // 终结状态会直接break出去
-                            break MainLoop;
                         default:
+                            // 终结状态会直接break出去
                             break MainLoop;
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("room-" + roomId  + "：主线程异常", e);
                 }
             }
         }
@@ -215,7 +211,7 @@ public class GameRoom implements Runnable {
             checkAndPush(whitePlayer);
             checkAndPush(blackPlayer);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("room-" + roomId  + "：推送棋盘信息异常", e);
         }
     }
 
@@ -224,7 +220,7 @@ public class GameRoom implements Runnable {
             if (player.isOpen()) {
                 player.getAsyncRemote().sendText(JSON.toJSONString(currentStatus()));
             } else {
-                System.out.println("room-" + roomId + "：" + "发现玩家" + player.getId() + "意外断开，把这个用户踢出");
+                log.info("room-" + roomId + "：" + "发现玩家" + player.getId() + "意外断开，把这个用户踢出");
                 quit(player);
             }
         }
