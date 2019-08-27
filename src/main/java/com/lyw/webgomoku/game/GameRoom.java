@@ -67,6 +67,7 @@ public class GameRoom implements Runnable {
             chessMap = new ChessMap();
             gameStatus = GameStatus.WHITE_WAITING;
         }
+        notify();
     }
 
     /**
@@ -94,6 +95,7 @@ public class GameRoom implements Runnable {
         } else {
             gameStatus = GameStatus.PREPARE;
         }
+        notify();
     }
 
     public synchronized void putAction(Session player, int i, int j) {
@@ -107,81 +109,72 @@ public class GameRoom implements Runnable {
             throw new IllegalArgumentException("roomId" + roomId + "：" + "玩家" + player.getId() + "当前不能落子");
         }
         chessAction = action;
+        notify();
     }
 
     @Override
     public void run() {
         enableWatcher();
-        while (gameStatus != GameStatus.TERMINAL) {
+        MainLoop:
+        while (true) {
             synchronized (this) {
-                switch (gameStatus) {
-                    case PREPARE:
-                        // 准备状态，等待另一位玩家，啥都不做
-                        break;
-                    case WHITE_WAITING:
-                        try {
+                try {
+                    wait();
+                    switch (gameStatus) {
+                        case PREPARE:
+                            // 准备状态，等待另一位玩家，啥都不做
+                            break;
+                        case WHITE_WAITING:
                             // 检查有无落白子的动作
                             if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_WHITE) {
                                 chessMap.put(chessAction);
                                 // 落子完成后检查结果
                                 if (chessMap.checkFive(chessAction)) {
                                     gameStatus = GameStatus.WHITE_WIN;
+                                    break MainLoop;
                                 } else if (chessMap.checkFull()) {
                                     gameStatus = GameStatus.DRAW;
+                                    break MainLoop;
                                 } else {
                                     gameStatus = GameStatus.BLACK_WAITING;
+                                    pushCurrent();
                                 }
-                                pushCurrent();
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        chessAction = null;
-                        break;
-                    case BLACK_WAITING:
-                        try {
+                            break;
+                        case BLACK_WAITING:
                             // 检查有无落黑子的动作
                             if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_BLACK) {
                                 chessMap.put(chessAction);
                                 // 落子完成后检查结果
                                 if (chessMap.checkFive(chessAction)) {
                                     gameStatus = GameStatus.BLACK_WIN;
+                                    break MainLoop;
                                 } else if (chessMap.checkFull()) {
                                     gameStatus = GameStatus.DRAW;
+                                    break MainLoop;
                                 } else {
                                     gameStatus = GameStatus.WHITE_WAITING;
+                                    pushCurrent();
                                 }
-                                pushCurrent();
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        chessAction = null;
-                        break;
-                    case WHITE_WIN:
-                    case BLACK_WIN:
-                    case DRAW:
-                        // 游戏结束了，稍等一下子线程推送结果，再把状态终止
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ignore) {
-                        }
-                        gameStatus = GameStatus.TERMINAL;
-                        break;
-                    case TERMINAL:
-                        // TERMINAL会直接跳出，不会有这个情况
-                        break;
-                    default:
-                        break;
+                            break;
+                        case WHITE_WIN:
+                        case BLACK_WIN:
+                        case DRAW:
+                        case TERMINAL:
+                            // 终结状态会直接break出去
+                            break MainLoop;
+                        default:
+                            break MainLoop;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
-            // 停一会让出CPU
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ignore) {
-            }
         }
-        // TERMINAL后线程结束，关闭房间
+        // 游戏结束
+        pushCurrent();
+        gameStatus = GameStatus.TERMINAL;
         closeRoom();
     }
 
