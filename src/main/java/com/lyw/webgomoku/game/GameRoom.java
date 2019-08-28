@@ -116,56 +116,66 @@ public class GameRoom implements Runnable {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         enableWatcher();
         MainLoop:
         while (true) {
-            synchronized (this) {
-                try {
-                    wait();
-                    switch (gameStatus) {
-                        case PREPARE:
-                            // 准备状态，等待另一位玩家，啥都不做
-                            break;
-                        case WHITE_WAITING:
-                            // 检查有无落白子的动作
-                            if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_WHITE) {
-                                chessMap.put(chessAction);
-                                if (chessMap.checkFive(chessAction)) {
-                                    gameStatus = GameStatus.WHITE_WIN;
-                                    break MainLoop;
-                                } else if (chessMap.checkFull()) {
-                                    gameStatus = GameStatus.DRAW;
-                                    break MainLoop;
-                                } else {
-                                    gameStatus = GameStatus.BLACK_WAITING;
-                                    pushCurrent();
-                                }
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                log.error("room-" + roomId + "：主线程异常", e);
+                break;
+            }
+            switch (gameStatus) {
+                case PREPARE:
+                    // 准备状态，等待另一位玩家，啥都不做
+                    pushCurrent();
+                    break;
+                case WHITE_WAITING:
+                    // 检查有无落白子的动作
+                    if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_WHITE) {
+                        try {
+                            chessMap.put(chessAction);
+                            if (chessMap.checkFive(chessAction)) {
+                                gameStatus = GameStatus.WHITE_WIN;
+                                break MainLoop;
+                            } else if (chessMap.checkFull()) {
+                                gameStatus = GameStatus.DRAW;
+                                break MainLoop;
+                            } else {
+                                gameStatus = GameStatus.BLACK_WAITING;
+                                pushCurrent();
                             }
-                            break;
-                        case BLACK_WAITING:
-                            // 检查有无落黑子的动作
-                            if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_BLACK) {
-                                chessMap.put(chessAction);
-                                if (chessMap.checkFive(chessAction)) {
-                                    gameStatus = GameStatus.BLACK_WIN;
-                                    break MainLoop;
-                                } else if (chessMap.checkFull()) {
-                                    gameStatus = GameStatus.DRAW;
-                                    break MainLoop;
-                                } else {
-                                    gameStatus = GameStatus.WHITE_WAITING;
-                                    pushCurrent();
-                                }
-                            }
-                            break;
-                        default:
-                            // 终结状态会直接break出去
-                            break MainLoop;
+                        } catch (Exception e) {
+                            log.error("room-" + roomId + "：落白子异常", e);
+                        }
                     }
-                } catch (Exception e) {
-                    log.error("room-" + roomId  + "：主线程异常", e);
-                }
+                    chessAction = null;
+                    break;
+                case BLACK_WAITING:
+                    // 检查有无落黑子的动作
+                    if (chessAction != null && chessAction.getPoint() == ChessMap.MapPointEnum.CHESS_BLACK) {
+                        try {
+                            chessMap.put(chessAction);
+                            if (chessMap.checkFive(chessAction)) {
+                                gameStatus = GameStatus.BLACK_WIN;
+                                break MainLoop;
+                            } else if (chessMap.checkFull()) {
+                                gameStatus = GameStatus.DRAW;
+                                break MainLoop;
+                            } else {
+                                gameStatus = GameStatus.WHITE_WAITING;
+                                pushCurrent();
+                            }
+                        } catch (Exception e) {
+                            log.error("room-" + roomId + "：落黑子异常", e);
+                        }
+                    }
+                    chessAction = null;
+                    break;
+                default:
+                    // 终结状态会直接break出去
+                    break MainLoop;
             }
         }
         // 游戏结束
@@ -211,7 +221,7 @@ public class GameRoom implements Runnable {
             checkAndPush(whitePlayer);
             checkAndPush(blackPlayer);
         } catch (Exception e) {
-            log.error("room-" + roomId  + "：推送棋盘信息异常", e);
+            log.error("room-" + roomId + "：推送棋盘信息异常", e);
         }
     }
 
